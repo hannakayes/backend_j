@@ -1,11 +1,12 @@
 const { default: mongoose } = require('mongoose')
 const Recipe = require('../models/Recipe.model')
+const { isAuthenticated } = require('../middlewares/route-guard.middleware')
 
 const router = require('express').Router()
 // All routes starts with /api/recipes
 router.get('/', async (req, res, next) => {
   try {
-    const recipesData = await Recipe.find()
+    const recipesData = await Recipe.find().populate('createdBy', 'username email')
     res.json(recipesData)
   } catch (error) {
     next(error)
@@ -29,16 +30,16 @@ router.get('/:recipeId', async (req, res, next) => {
   }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', isAuthenticated, async (req, res, next) => {
   try {
-    const newRecipe = await Recipe.create(req.body)
+    const newRecipe = await Recipe.create({ ...req.body, createdBy: req.tokenPayload.userId })
     res.status(201).json(newRecipe)
   } catch (error) {
     next(error)
   }
 })
 
-router.put('/:recipeId', async (req, res, next) => {
+router.put('/:recipeId', isAuthenticated, async (req, res, next) => {
   const { recipeId } = req.params
 
   if (!mongoose.Types.ObjectId.isValid(recipeId)) {
@@ -60,7 +61,7 @@ router.put('/:recipeId', async (req, res, next) => {
   }
 })
 
-router.delete('/:recipeId', async (req, res, next) => {
+router.delete('/:recipeId', isAuthenticated, async (req, res, next) => {
   const { recipeId } = req.params
 
   if (!mongoose.Types.ObjectId.isValid(recipeId)) {
@@ -68,11 +69,14 @@ router.delete('/:recipeId', async (req, res, next) => {
   }
 
   try {
-    const deletedRecipe = await Recipe.findByIdAndDelete(recipeId)
-    if (!deletedRecipe) {
+    const recipeToDelete = await Recipe.findById(recipeId)
+    if (!recipeToDelete) {
       return next(new Error('Recipe not found'))
     }
-    res.status(204).send()
+    if (recipeToDelete.createdBy === req.tokenPayload.userId) {
+      await Recipe.findByIdAndDelete(recipeId)
+      res.status(204).send()
+    }
   } catch (error) {
     next(error)
   }

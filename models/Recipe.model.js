@@ -1,4 +1,4 @@
-const { Schema, model } = require('mongoose')
+const { Schema, model, Types } = require('mongoose')
 
 const recipeSchema = new Schema(
   {
@@ -8,9 +8,9 @@ const recipeSchema = new Schema(
       trim: true,
     },
     createdBy: {
-      type: String,
-      trim: true,
-      default: 'Anonymous',
+      type: Types.ObjectId,
+      required: true,
+      ref: 'User',
     },
     instructions: {
       type: [String],
