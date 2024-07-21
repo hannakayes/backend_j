@@ -1,22 +1,26 @@
-module.exports = app => {
+// error-handling/index.js
+
+module.exports = (app) => {
+  // Middleware to handle 404 errors (when route does not exist)
   app.use((req, res) => {
-    // this middleware runs whenever requested page is not available
     res.status(404).json({
       message:
-        'This route does not exist, you should probably look at your URL or what your backend is expecting',
-    })
-  })
+        "This route does not exist, you should probably look at your URL or what your backend is expecting",
+    });
+  });
 
-  app.use((err, req, res) => {
-    // whenever you call next(err), this middleware will handle the error
-    // always logs the error
-    console.error('ERROR', req.method, req.path, err)
+  // Middleware to handle general errors
+  app.use((err, req, res, next) => {
+    console.error("ERROR", req.method, req.path, err); // Log the error details
 
-    // only render if the error ocurred before sending the response
+    // Only send a response if headers haven't been sent already
     if (!res.headersSent) {
-      res.status(500).json({
-        message: 'Internal server error. Check the server console',
-      })
+      res.status(err.status || 500).json({
+        message:
+          err.message || "Internal server error. Check the server console",
+        // Include stack trace in development mode
+        ...(process.env.NODE_ENV === "development" ? { stack: err.stack } : {}),
+      });
     }
-  })
-}
+  });
+};
