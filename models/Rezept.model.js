@@ -1,16 +1,16 @@
-const { Schema, model, Types } = require('mongoose')
+const { Schema, model, Types } = require("mongoose");
 
-const recipeSchema = new Schema(
+const rezeptSchema = new Schema(
   {
     title: {
       type: String,
-      required: [true, 'Title is required.'],
+      required: [true, "Title is required."],
       trim: true,
     },
     createdBy: {
       type: Types.ObjectId,
       required: true,
-      ref: 'User',
+      ref: "User",
     },
     instructions: {
       type: [String],
@@ -22,16 +22,15 @@ const recipeSchema = new Schema(
     },
     difficultyLevel: {
       type: String,
-      enum: ['Easy', 'Okay', 'Hard'],
+      enum: ["Easy", "Okay", "Hard"],
       required: true,
     },
   },
   {
-    // this second object adds extra properties: `createdAt` and `updatedAt`
     timestamps: true,
   }
-)
+);
 
-const Recipe = model('Recipe', recipeSchema)
+const Rezept = model("Rezept", rezeptSchema);
 
-module.exports = Recipe
+module.exports = Rezept;
