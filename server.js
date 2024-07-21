@@ -1,11 +1,10 @@
 require("dotenv").config();
-
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors"); // Import cors
+const cors = require("cors");
 const app = express();
 const authRoutes = require("./routes/auth.routes");
-const rezepteRoutes = require("./routes/rezepte.routes"); // Ensure this matches your file path
+const rezepteRoutes = require("./routes/rezepte.routes");
 const kunstRoutes = require("./routes/kunst.routes");
 const musikRoutes = require("./routes/musik.routes");
 const filmeRoutes = require("./routes/filme.routes");
@@ -14,28 +13,33 @@ const dokusRoutes = require("./routes/dokus.routes");
 const bingoRoutes = require("./routes/bingo.routes");
 const errorHandling = require("./error-handling");
 
+const corsOptions = {
+  origin: ["http://localhost:5173", "https://crexcrex.netlify.app"], // Allow both development and production origins
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type,Authorization",
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Other middleware and routes
+
+// Apply CORS middleware to your application
+app.use(cors(corsOptions));
+
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Configure CORS
-const corsOptions = {
-  origin: "http://localhost:5173", // Replace with your front-end URL
-  methods: "GET,POST,PUT,DELETE", // Specify allowed methods
-  allowedHeaders: "Content-Type,Authorization", // Specify allowed headers
-};
-
-app.use(cors(corsOptions)); // Use cors middleware
-
 // Connect to MongoDB
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/restAPI";
+const MONGO_URI = process.env.MONGO_URI; // Use environment variable for MongoDB URI
 mongoose
-  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(MONGO_URI)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
 // Mount routes
 app.use("/auth", authRoutes);
-app.use("/api/rezepte", rezepteRoutes); // Ensure this matches your desired route path
+app.use("/api/rezepte", rezepteRoutes);
 app.use("/api/kunst", kunstRoutes);
 app.use("/api/musik", musikRoutes);
 app.use("/api/filme", filmeRoutes);
