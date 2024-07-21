@@ -2,27 +2,47 @@ const jwt = require("jsonwebtoken");
 
 const isAuthenticated = (req, res, next) => {
   try {
+    // Check for token in Authorization header
     const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json("Authorization header missing");
+    let token;
+
+    if (authHeader) {
+      token = authHeader.split(" ")[1];
+    } else if (req.cookies && req.cookies.authToken) {
+      // Check for token in cookies
+      token = req.cookies.authToken;
+    } else {
+      return res.status(401).json({ message: "Authorization token missing" });
     }
 
-    const token = authHeader.split(" ")[1];
     if (!token) {
-      return res.status(401).json("Token missing from Authorization header");
+      return res
+        .status(401)
+        .json({
+          message: "Token missing from Authorization header or cookies",
+        });
     }
 
     if (!process.env.TOKEN_SECRET) {
       console.error("TOKEN_SECRET environment variable is not set");
-      return res.status(500).json("Server configuration error");
+      return res.status(500).json({ message: "Server configuration error" });
     }
 
+    // Verify the token
     const payload = jwt.verify(token, process.env.TOKEN_SECRET);
     req.tokenPayload = payload;
     next();
   } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      // Handle token expiration specifically
+      return res.status(401).json({ message: "Token has expired" });
+    } else if (error.name === "JsonWebTokenError") {
+      // Handle invalid token
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    // General error
     console.error("Token verification error:", error);
-    res.status(401).json("Invalid or expired token");
+    res.status(401).json({ message: "Invalid or expired token" });
   }
 };
 
